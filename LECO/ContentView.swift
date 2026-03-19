@@ -6,7 +6,9 @@ struct ContentView: View {
         NavigationView {
             GeometryReader { geo in
                 ZStack {
-                    // Fondo
+                    
+                    // MARK: - Fondo y Degradados
+                    // Configura el color de fondo de la pantalla principal
                     LinearGradient(
                         gradient: Gradient(colors: [
                             Color(red: 0.3, green: 0.1, blue: 0.6),
@@ -18,7 +20,8 @@ struct ContentView: View {
                     )
                     .ignoresSafeArea()
                     
-                    // Decoraciones
+                    // MARK: - Decoraciones Visuales
+                    // Figuras geométricas y destellos para hacer la app más atractiva
                     Circle()
                         .fill(Color.white.opacity(0.12))
                         .frame(width: 900, height: 900)
@@ -37,7 +40,6 @@ struct ContentView: View {
                         .rotationEffect(.degrees(-45))
                         .position(x: geo.size.width / 2, y: geo.size.height / 2)
                     
-                    // Destellos
                     Image(systemName: "sparkle")
                         .font(.system(size: 80))
                         .foregroundColor(.yellow.opacity(0.5))
@@ -48,15 +50,12 @@ struct ContentView: View {
                         .foregroundColor(.white.opacity(0.3))
                         .position(x: 100, y: geo.size.height / 2 + 100)
 
-                    // Contenido
+                    // MARK: - Contenido Principal (Título y Logo)
                     VStack(spacing: 40) {
                         
-                        //Titulo =)
                         Text(" LECO (:)-/-[ ")
-                            // .rounded es el equivalente moderno a Arial Rounded
                             .font(.system(size: 90, weight: .heavy, design: .rounded))
                             .foregroundColor(.white)
-                            // Sombra suave para que resalte
                             .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
                             .padding(.top, 60)
                         
@@ -68,10 +67,11 @@ struct ContentView: View {
                         
                         Spacer()
                         
-                        // Botones
+                        // MARK: - Botones de Navegación
+                        // Botones interactivos con soporte de accesibilidad (VoiceOver)
                         VStack(spacing: 40) {
                             
-                            // Botón 1: Cuentos
+                            // Botón de Cuentos
                             NavigationLink(destination: CatalogoView()) {
                                 HStack(spacing: 20) {
                                     Image(systemName: "book.fill")
@@ -91,8 +91,11 @@ struct ContentView: View {
                                         .stroke(Color.white.opacity(0.4), lineWidth: 3)
                                 )
                             }
+                            // ACCESIBILIDAD
+                            .accessibilityLabel("Leer Cuentos")
+                            .accessibilityHint("Toca dos veces para abrir la biblioteca de cuentos")
                             
-                            // Botón 2: Minijuegos
+                            // Botón de Minijuegos
                             NavigationLink(destination: MinijuegosMenuView()) {
                                 HStack(spacing: 20) {
                                     Image(systemName: "wand.and.stars")
@@ -112,6 +115,9 @@ struct ContentView: View {
                                         .stroke(Color.white.opacity(0.4), lineWidth: 3)
                                 )
                             }
+                            // ACCESIBILIDAD
+                            .accessibilityLabel("Jugar Minijuegos")
+                            .accessibilityHint("Toca dos veces para ver la lista de juegos divertidos")
                         }
                         .padding(.bottom, 80)
                     }
