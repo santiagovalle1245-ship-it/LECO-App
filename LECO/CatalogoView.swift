@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Formas Personalizadas
-// Crea una forma de triángulo para las decoraciones del fondo
+// Dejamos tu estructura Triangle intacta por si la usas en otro lado
 struct Triangle: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -22,37 +22,8 @@ struct CatalogoView: View {
                 ZStack {
                     
                     // MARK: - Fondo y Decoraciones
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color(red: 0.4, green: 0.3, blue: 0.7).opacity(0.8),
-                            Color(red: 0.2, green: 0.2, blue: 0.5).opacity(0.9)
-                        ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .ignoresSafeArea()
-                    
-                    Circle()
-                        .fill(Color.white.opacity(0.20))
-                        .frame(width: 500, height: 500)
-                        .position(x: 80, y: 150)
-                    
-                    Triangle()
-                        .fill(Color.white.opacity(0.15))
-                        .frame(width: 400, height: 400)
-                        .rotationEffect(.degrees(180))
-                        .position(x: geo.size.width - 150, y: geo.size.height - 150)
-
-                    Circle()
-                        .fill(Color.white.opacity(0.18))
-                        .frame(width: 300, height: 300)
-                        .position(x: geo.size.width - 100, y: 100)
-                    
-                    Triangle()
-                        .fill(Color.white.opacity(0.12))
-                        .frame(width: 150, height: 150)
-                        .rotationEffect(.degrees(-30))
-                        .position(x: 100, y: geo.size.height - 200)
+                    // 👉 AQUÍ ESTÁ EL ÚNICO CAMBIO: Reemplazamos las figuras por tu vista animada
+                    FondoCuentosView()
 
                     // MARK: - Encabezado
                     VStack {
@@ -64,7 +35,6 @@ struct CatalogoView: View {
                                     .cornerRadius(12)
                                     .shadow(radius: 2)
                             }
-                            // ACCESIBILIDAD
                             .accessibilityLabel("Volver al menú principal")
                             .accessibilityHint("Toca dos veces para salir del catálogo")
                             .padding(.leading)
@@ -78,8 +48,7 @@ struct CatalogoView: View {
                             .shadow(color: .black.opacity(0.4), radius: 5)
                             .padding(.bottom, 20)
                         
-                        // MARK: - Lista de Cuentos
-                        // Recorre la lista de cuentos y crea una tarjeta para cada uno
+                        // MARK: - Lista de Cuentos (Intacta)
                         List {
                             ForEach(listaDeCuentos, id: \.id) { cuento in
                                 NavigationLink(destination: LecturaView(cuento: cuento)) {
@@ -103,8 +72,6 @@ struct CatalogoView: View {
                                         Spacer()
                                     }
                                     .padding()
-                                    // ACCESIBILIDAD
-                                    // Combine une la imagen, titulo y autor en un solo elemento de audio para el lector
                                     .accessibilityElement(children: .combine)
                                     .accessibilityLabel("Cuento: \(cuento.titulo), Autor: \(cuento.autor)")
                                     .accessibilityHint("Toca dos veces para empezar a leer este cuento")

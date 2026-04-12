@@ -8,41 +8,10 @@ struct MinijuegosMenuView: View {
             GeometryReader { geo in
                 ZStack {
                     
-                    // MARK: - Fondo y Decoraciones
-                    // Establece un fondo vibrante y figuras semitransparentes
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color(red: 0.95, green: 0.6, blue: 0.1),
-                            Color(red: 0.9, green: 0.3, blue: 0.1)
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .ignoresSafeArea()
+                    // CAMBIO: Nuestro nuevo fondo retro animado
+                    FondoJuegosView()
                     
-                    Capsule()
-                        .fill(Color.white.opacity(0.30))
-                        .frame(width: 600, height: 200)
-                        .rotationEffect(.degrees(-35))
-                        .position(x: 100, y: geo.size.height / 2 - 100)
-                    
-                    Circle()
-                        .fill(Color.white.opacity(0.25))
-                        .frame(width: 500, height: 500)
-                        .position(x: geo.size.width - 100, y: 150)
-                    
-                    Image(systemName: "gamecontroller.fill")
-                        .font(.system(size: 150))
-                        .foregroundColor(.white.opacity(0.20))
-                        .rotationEffect(.degrees(15))
-                        .position(x: geo.size.width - 150, y: geo.size.height - 150)
-                    
-                    Image(systemName: "puzzlepiece.extension.fill")
-                        .font(.system(size: 120))
-                        .foregroundColor(.white.opacity(0.18))
-                        .position(x: 100, y: geo.size.height - 200)
-                    
-                    // MARK: - Encabezado y Navegación
+                    // Encabezado y Navegación
                     VStack(spacing: 20) {
                         
                         // Botón de Volver
@@ -55,7 +24,6 @@ struct MinijuegosMenuView: View {
                                     .cornerRadius(15)
                                     .shadow(radius: 3)
                             }
-                            // ACCESIBILIDAD
                             .accessibilityLabel("Volver al menú principal")
                             .accessibilityHint("Toca dos veces para salir de los minijuegos")
                             .padding([.leading, .top], 30)
@@ -68,8 +36,7 @@ struct MinijuegosMenuView: View {
                             .shadow(color: .black.opacity(0.4), radius: 6, y: 4)
                             .padding(.bottom, 10)
                         
-                        // MARK: - Lista de Juegos
-                        // Muestra todos los botones creados con la función reutilizable
+                        // Lista de Juegos
                         ScrollView {
                             VStack(spacing: 30) {
                                 NavigationLink(destination: PalabraPerdidaView()) { botonJuego(titulo: "🧠 Palabra Perdida", color: Color(red: 0.4, green: 0.3, blue: 0.7)) }
@@ -95,7 +62,6 @@ struct MinijuegosMenuView: View {
         .navigationViewStyle(.stack)
     }
     
-    // MARK: - Componentes UI (Reutilizables)
     // Función que genera el diseño de cada botón de minijuego
     func botonJuego(titulo: String, color: Color) -> some View {
         Text(titulo)
@@ -106,7 +72,6 @@ struct MinijuegosMenuView: View {
             .foregroundColor(.white)
             .cornerRadius(30)
             .shadow(color: .black.opacity(0.3), radius: 5, y: 5)
-            // ACCESIBILIDAD APLICADA A TODOS LOS JUEGOS
             .accessibilityLabel("Juego: \(titulo)")
             .accessibilityHint("Toca dos veces para empezar este juego")
             .accessibilityAddTraits(.isButton)
