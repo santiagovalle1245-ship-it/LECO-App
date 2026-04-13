@@ -3,41 +3,65 @@ import AVFoundation
 import Combine
 
 class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
-    // El sintetizador es el motor de IA que convierte texto a voz
-    private let synthesizer = AVSpeechSynthesizer()
     
-    // Variable para saber si está hablando o no (para cambiar el ícono del botón)
+    private let synthesizer = AVSpeechSynthesizer()
     @Published var isSpeaking = false
-
+    
+    // --- NUESTROS DOS RADIOS PARA EL KARAOKE ---
+    @Published var indicePalabraActual: Int = -1
+    @Published var indiceRenglonActual: Int = -1 // ¡NUEVO! Avisa en qué renglón vamos
+    
     override init() {
         super.init()
         synthesizer.delegate = self
     }
-
+    
     func leerCuento(texto: String) {
-        // Configuramos lo que va a decir
         let utterance = AVSpeechUtterance(string: texto)
-        
-        // Configuramos el idioma (Español de México)
         utterance.voice = AVSpeechSynthesisVoice(language: "es-MX")
-        
-        // Velocidad un poco más lenta (0.5 es normal, 0.4 es mejor para niños)
         utterance.rate = 0.4
         
-        // ¡Hablar!
+        // Apagamos los dos radios al empezar
+        indicePalabraActual = -1
+        indiceRenglonActual = -1
+        
         synthesizer.speak(utterance)
         isSpeaking = true
     }
-
+    
     func detener() {
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
         isSpeaking = false
+        indicePalabraActual = -1
+        indiceRenglonActual = -1
     }
-
-    // Esta función avisa cuando la IA termina de hablar por sí sola
+    
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, willSpeakRangeOfSpeechString characterRange: NSRange, utterance: AVSpeechUtterance) {
+        
+        // 1. Calculamos la palabra actual (esto ya lo teníamos)
+        let textoHastaAhora = String(utterance.speechString.prefix(characterRange.location))
+        let palabrasAnteriores = textoHastaAhora.split(separator: " ")
+        
+        // 2. NUEVO: Calculamos el renglón actual usando los puntos finales (".")
+        // Cortamos el texto hasta donde vamos usando el punto como separador
+        let renglonesAnteriores = textoHastaAhora.split(separator: ".")
+        
+        DispatchQueue.main.async {
+            self.indicePalabraActual = palabrasAnteriores.count
+            
+            // Si no ha habido ningún punto, estamos en el renglón 0.
+            // Si ya pasó un punto, estamos en el renglón 1, etc.
+            self.indiceRenglonActual = max(0, renglonesAnteriores.count - 1)
+        }
+    }
+    
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        isSpeaking = false
+        DispatchQueue.main.async {
+            self.isSpeaking = false
+            self.indicePalabraActual = -1
+            self.indiceRenglonActual = -1
+        }
     }
 }

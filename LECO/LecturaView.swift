@@ -4,48 +4,19 @@ struct LecturaView: View {
     let cuento: Cuento
     @Environment(\.dismiss) var dismiss
     
-    // Conectamos los motores de audio y voz
     @StateObject private var audioManager = AudioManager()
     @StateObject private var speechManager = SpeechManager()
     
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                // --- FONDO INTENSO (Estilo Pergamino) ---
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.96, green: 0.92, blue: 0.82), // Tan claro
-                        Color(red: 0.9, green: 0.85, blue: 0.7)    // Tan más oscuro
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                FondoLecturaView()
                 
-                // --- DECORACIONES DE FONDO ---
-                Image(systemName: "book.fill")
-                    .font(.system(size: 150))
-                    .foregroundColor(.black.opacity(0.08))
-                    .position(x: 100, y: 120)
-                
-                Image(systemName: "feather")
-                    .font(.system(size: 200))
-                    .foregroundColor(.black.opacity(0.06))
-                    .rotationEffect(.degrees(30))
-                    .position(x: geo.size.width - 100, y: geo.size.height / 2)
-                
-                Image(systemName: "sun.max.fill")
-                    .font(.system(size: 180))
-                    .foregroundColor(.black.opacity(0.07))
-                    .position(x: 120, y: geo.size.height - 100)
-                
-                // --- CONTENIDO PRINCIPAL ---
                 VStack(spacing: 0) {
                     
-                    // Botón de Volver
+                    // --- BOTÓN DE VOLVER ---
                     HStack {
                         Button(action: {
-                            // Detenemos todo al salir
                             audioManager.stopPlayback()
                             audioManager.stopRecording()
                             speechManager.detener()
@@ -56,65 +27,93 @@ struct LecturaView: View {
                                 .background(Color.white.opacity(0.8))
                                 .cornerRadius(15)
                                 .shadow(radius: 3)
+                                .foregroundColor(.black)
                         }
                         .padding([.leading, .top], 30)
                         Spacer()
                     }
                     
-                    // Área de Lectura
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 25) {
-                            
-                            // TÍTULO (Redondeado y Grueso)
-                            Text(cuento.titulo)
-                                .font(.system(size: 50, weight: .heavy, design: .rounded))
-                                .foregroundColor(Color(red: 0.4, green: 0.2, blue: 0.1))
-                            
-                            // AUTOR (Redondeado y Sutil)
-                            Text(cuento.autor)
-                                .font(.system(size: 24, weight: .medium, design: .rounded))
-                                .italic()
-                                .foregroundColor(.gray)
-                                .padding(.bottom, 10)
-                            
-                            Image(cuento.imagenPortada)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 450)
-                                .cornerRadius(20)
-                                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-                                .padding(.bottom, 20)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                            
-                            // TEXTO DEL CUENTO (Redondeado, Limpio y Grande)
-                            Text(cuento.contenido)
-                                .font(.system(size: 28, weight: .regular, design: .rounded))
-                                .lineSpacing(10) // Espacio cómodo entre líneas
-                                .foregroundColor(Color.black.opacity(0.85))
-                            
-                            Spacer().frame(height: 120)
+                    // --- ÁREA DE LECTURA INMERSIVA CON AUTO-SCROLL ---
+                    // Envolvemos el ScrollView con el Elevadorista (ScrollViewReader)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(alignment: .center, spacing: 30) {
+                                
+                                Text(cuento.titulo)
+                                    .font(.system(size: 55, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.center)
+                                    .shadow(color: .black.opacity(0.3), radius: 5, y: 3)
+                                
+                                Text(cuento.autor)
+                                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .padding(.bottom, 10)
+                                
+                                Image(cuento.imagenPortada)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxHeight: 350)
+                                    .cornerRadius(25)
+                                    .shadow(color: .black.opacity(0.4), radius: 15, y: 8)
+                                    .padding(.bottom, 30)
+                                
+                                // --- TEXTO DEL CUENTO EN BLOQUES DE LEGO (Renglones) ---
+                                // 1. Cortamos el cuento en oraciones (usando el punto)
+                                let renglones = cuento.contenido.components(separatedBy: ".")
+                                // 2. Llevamos una cuenta paralela de cuántas palabras van en total
+                                // para no perder la sincronización del color
+                                var contadorPalabrasAcumuladas = 0
+                                
+                                // 3. Dibujamos cada renglón por separado
+                                ForEach(0..<renglones.count, id: \.self) { indexRenglon in
+                                    let renglon = renglones[indexRenglon]
+                                    
+                                    // Evitamos dibujar renglones vacíos si hay un punto al final del cuento
+                                    if !renglon.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        
+                                        let palabrasDelRenglon = renglon.split(separator: " ")
+                                        
+                                        // Dibujamos el renglón
+                                        Text(crearTextoRenglon(
+                                            palabras: palabrasDelRenglon,
+                                            indicePalabraActiva: speechManager.indicePalabraActual,
+                                            palabrasAcumuladas: contadorPalabrasAcumuladas
+                                        ))
+                                        .multilineTextAlignment(.leading)
+                                        .lineSpacing(15)
+                                        .id(indexRenglon) // ¡AQUÍ LE PONEMOS EL GAFETE AL RENGLÓN!
+                                        
+                                        // Sumamos las palabras de este renglón para el siguiente ciclo
+                                        let _ = (contadorPalabrasAcumuladas += palabrasDelRenglon.count)
+                                    }
+                                }
+                                
+                                Spacer().frame(height: 150)
+                            }
+                            .padding(.horizontal, 40)
+                            .padding(.top, 20)
                         }
-                        .padding(60)
+                        // LA MAGIA: Le decimos al Elevadorista que escuche el radio del renglón
+                        .onChange(of: speechManager.indiceRenglonActual) { nuevoRenglon in
+                            // Si el renglón es mayor a 0, haz scroll suave hacia ese gafete
+                            if nuevoRenglon >= 0 {
+                                withAnimation(.easeInOut(duration: 1.0)) {
+                                    // Anclamos el renglón al centro de la pantalla (.center)
+                                    proxy.scrollTo(nuevoRenglon, anchor: .center)
+                                }
+                            }
+                        }
                     }
-                    .background(
-                        RoundedRectangle(cornerRadius: 30)
-                            .fill(Color.white.opacity(0.92))
-                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
-                    )
-                    .padding(EdgeInsets(top: 20, leading: 80, bottom: 40, trailing: 80))
+                    // --- FIN ÁREA LECTURA ---
                     
-                    // --- BARRA DE HERRAMIENTAS ---
+                    // --- BARRA DE HERRAMIENTAS (Se queda igual) ---
                     .overlay(alignment: .bottom) {
                         HStack(spacing: 30) {
-                            
-                            // 1. IZQUIERDA: Ir a la Prueba
                             NavigationLink(destination: PruebaCuentoView(cuento: cuento)) {
                                 HStack {
-                                    Image(systemName: "brain.head.profile")
-                                        .font(.system(size: 30))
-                                    Text("Prueba")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
+                                    Image(systemName: "brain.head.profile").font(.system(size: 30))
+                                    Text("Prueba").font(.title3).fontWeight(.bold)
                                 }
                                 .padding()
                                 .background(Color.orange)
@@ -122,10 +121,7 @@ struct LecturaView: View {
                                 .cornerRadius(30)
                                 .shadow(radius: 5)
                             }
-                            
                             Spacer()
-                            
-                            // 2. CENTRO: IA Lector de Voz
                             Button(action: {
                                 if speechManager.isSpeaking {
                                     speechManager.detener()
@@ -134,11 +130,8 @@ struct LecturaView: View {
                                 }
                             }) {
                                 HStack {
-                                    Image(systemName: speechManager.isSpeaking ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                        .font(.system(size: 30))
-                                    Text(speechManager.isSpeaking ? "Silencio" : "Leer")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
+                                    Image(systemName: speechManager.isSpeaking ? "speaker.slash.fill" : "speaker.wave.2.fill").font(.system(size: 30))
+                                    Text(speechManager.isSpeaking ? "Silencio" : "Leer").font(.title3).fontWeight(.bold)
                                 }
                                 .padding()
                                 .background(Color.purple)
@@ -146,10 +139,7 @@ struct LecturaView: View {
                                 .cornerRadius(30)
                                 .shadow(radius: 5)
                             }
-                            
                             Spacer()
-                            
-                            // 3. DERECHA: Grabadora
                             HStack(spacing: 20) {
                                 if audioManager.isRecording {
                                     Button(action: { audioManager.stopRecording() }) {
@@ -168,7 +158,6 @@ struct LecturaView: View {
                                         .padding().background(Color.red).foregroundColor(.white).cornerRadius(30).shadow(radius: 5)
                                     }
                                 }
-                                
                                 if audioManager.recordingExists && !audioManager.isRecording {
                                     Button(action: {
                                         if audioManager.isPlaying { audioManager.stopPlayback() } else { audioManager.startPlayback() }
@@ -195,6 +184,33 @@ struct LecturaView: View {
             speechManager.detener()
         }
     }
+    
+    // --- FUNCIÓN MOTOR DE TEXTO (Ligeramente ajustada para trabajar por renglón) ---
+    func crearTextoRenglon(palabras: [String.SubSequence], indicePalabraActiva: Int, palabrasAcumuladas: Int) -> AttributedString {
+        var textoFinal = AttributedString("")
+        
+        for (indexLocal, palabra) in palabras.enumerated() {
+            // Re-agregamos el punto que le quitamos al separar los renglones (si es la última palabra)
+            let esUltimaPalabra = (indexLocal == palabras.count - 1)
+            let textoPalabra = String(palabra) + (esUltimaPalabra ? ". " : " ")
+            
+            var palabraAtributos = AttributedString(textoPalabra)
+            
+            // Calculamos el índice global de la palabra en todo el cuento
+            let indexGlobal = palabrasAcumuladas + indexLocal
+            
+            if indexGlobal == indicePalabraActiva {
+                palabraAtributos.foregroundColor = .white
+                palabraAtributos.font = .system(size: 46, weight: .black, design: .rounded)
+            } else {
+                palabraAtributos.foregroundColor = .white.opacity(0.35)
+                palabraAtributos.font = .system(size: 38, weight: .bold, design: .rounded)
+            }
+            
+            textoFinal.append(palabraAtributos)
+        }
+        return textoFinal
+    }
 }
 
 struct LecturaView_Previews: PreviewProvider {
@@ -203,3 +219,4 @@ struct LecturaView_Previews: PreviewProvider {
             .previewDevice("iPad Pro (12.9-inch)")
     }
 }
+
